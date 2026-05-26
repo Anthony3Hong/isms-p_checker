@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ISMS-P 준비 진단기</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #1a4fd6; --primary-dark: #1240b0; --primary-light: #e8effe;
+      --accent: #0ea5e9; --success: #10b981;
+      --text: #0f172a; --text-muted: #64748b;
+      --border: #e2e8f0; --bg: #f8fafc; --card: #ffffff;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; padding: 40px 16px 80px; line-height: 1.6;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+
+    /* Header */
+    .header { text-align: center; margin-bottom: 40px; }
+    .badge {
+      display: inline-block; background: var(--primary-light); color: var(--primary);
+      font-size: 12px; font-weight: 700; letter-spacing: .06em;
+      padding: 4px 12px; border-radius: 20px; margin-bottom: 14px; text-transform: uppercase;
+    }
+    .header h1 { font-size: 28px; font-weight: 800; letter-spacing: -.02em; line-height: 1.3; margin-bottom: 10px; }
+    .header p { color: var(--text-muted); font-size: 15px; }
+
+    /* Card */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; margin-bottom: 20px;
+    }
+    .card-label {
+      font-size: 13px; font-weight: 700; color: var(--text-muted);
+      letter-spacing: .05em; text-transform: uppercase;
+      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .card-label span {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; background: var(--primary); color: #fff;
+      border-radius: 50%; font-size: 11px;
+    }
+
+    /* Option grid */
+    .options { display: grid; gap: 10px; }
+    .options.col2 { grid-template-columns: repeat(2, 1fr); }
+    .option-btn {
+      position: relative; cursor: pointer; border: 2px solid var(--border);
+      border-radius: 10px; padding: 14px 12px; background: #fff;
+      text-align: center; transition: all .18s ease; user-select: none;
+    }
+    .option-btn input { position: absolute; opacity: 0; pointer-events: none; }
+    .option-btn .opt-icon { font-size: 22px; margin-bottom: 6px; display: block; }
+    .option-btn .opt-title { font-size: 14px; font-weight: 700; display: block; }
+    .option-btn .opt-desc { font-size: 11px; color: var(--text-muted); margin-top: 3px; display: block; }
+    .option-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+    .option-btn.selected {
+      border-color: var(--primary); background: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(26,79,214,.15);
+    }
+    .option-btn.selected .opt-title { color: var(--primary); }
+    .option-btn.selected::after {
+      content: '✓'; position: absolute; top: 8px; right: 10px;
+      font-size: 13px; color: var(--primary); font-weight: 800;
+    }
+
+    /* Questions */
+    .q-progress { font-size: 12px; color: var(--text-muted); text-align: right; margin-bottom: 10px; }
+    .q-progress strong { color: var(--primary); }
+    .q-list { display: flex; flex-direction: column; gap: 10px; }
+    .q-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px;
+      background: #fafbfc; transition: background .15s, border-color .15s;
+    }
+    .q-row.answered { background: #fff; border-color: #cbd5e1; }
+    .q-text { font-size: 14px; font-weight: 500; flex: 1; line-height: 1.4; }
+    .q-toggle { display: flex; gap: 6px; flex-shrink: 0; }
+    .q-btn {
+      padding: 7px 18px; border: 1.5px solid var(--border); border-radius: 20px;
+      font-size: 13px; font-weight: 600; cursor: pointer; background: #fff;
+      color: var(--text-muted); transition: all .15s; white-space: nowrap;
+    }
+    .q-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .q-btn.active-yes { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
+    .q-btn.active-no  { background: #fee2e2; border-color: #ef4444; color: #dc2626; }
+
+    /* CTA */
+    .cta-wrap { text-align: center; margin-top: 8px; }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--primary); color: #fff; border: none; border-radius: 10px;
+      padding: 16px 36px; font-size: 16px; font-weight: 700; cursor: pointer;
+      transition: all .18s ease; box-shadow: 0 4px 14px rgba(26,79,214,.35); letter-spacing: -.01em;
+    }
+    .cta-btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,79,214,.4); }
+    .cta-btn:active { transform: translateY(0); }
+    .cta-btn:disabled { background: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+
+    /* Result */
+    #result { display: none; }
+    #result.visible { display: block; animation: fadeUp .35s ease; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .result-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
+    .result-icon {
+      flex-shrink: 0; width: 48px; height: 48px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
+    }
+    .result-title { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+    .result-subtitle { font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+
+    /* Notice */
+    .result-notice {
+      font-size: 12px; color: var(--text-muted);
+      background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;
+      padding: 8px 12px; margin-bottom: 12px;
+    }
+
+    /* Items */
+    .items-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .item {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 16px; border-radius: 10px; border: 1px solid var(--border);
+      background: #fff; transition: box-shadow .15s;
+    }
+    .item:hover { box-shadow: var(--shadow); }
+    .item-rank {
+      flex-shrink: 0; width: 30px; height: 30px; border-radius: 8px;
+      background: var(--primary-light); color: var(--primary);
+      font-weight: 800; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .item:nth-child(1) .item-rank { background: #fef3c7; color: #d97706; }
+    .item:nth-child(2) .item-rank { background: #f1f5f9; color: #64748b; }
+    .item:nth-child(3) .item-rank { background: #fde8d8; color: #c2410c; }
+    .item-body { flex: 1; min-width: 0; }
+    .item-code {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      color: var(--primary); background: var(--primary-light);
+      border-radius: 5px; padding: 2px 7px; margin-bottom: 5px; letter-spacing: .03em;
+    }
+    .item-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .item-detail { font-size: 13px; color: var(--text-muted); }
+    .urgency-tag { flex-shrink: 0; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+    .urgency-high { background: #fee2e2; color: #dc2626; }
+    .urgency-mid  { background: #fef3c7; color: #d97706; }
+    .urgency-low  { background: #dcfce7; color: #16a34a; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 32px 16px; }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-title { font-size: 16px; font-weight: 700; color: var(--success); margin-bottom: 6px; }
+    .empty-desc { font-size: 13px; color: var(--text-muted); }
+
+    /* Email section */
+    .email-section {
+      margin-top: 20px; padding: 20px;
+      background: linear-gradient(135deg, #f0f4ff, #e8f5ff);
+      border: 1px solid rgba(26,79,214,.15); border-radius: 12px;
+    }
+    .email-label { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+    .email-sublabel { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+    .email-form { display: flex; gap: 8px; }
+    .email-input {
+      flex: 1; padding: 10px 14px;
+      border: 1.5px solid rgba(26,79,214,.2); border-radius: 8px;
+      font-size: 14px; outline: none; background: #fff; transition: border-color .15s;
+    }
+    .email-input:focus { border-color: var(--primary); }
+    .email-submit {
+      padding: 10px 18px; background: var(--primary); color: #fff; border: none;
+      border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;
+      white-space: nowrap; transition: background .15s;
+    }
+    .email-submit:hover { background: var(--primary-dark); }
+    .email-success {
+      display: none; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 600; color: var(--success); padding-top: 4px;
+    }
+    .email-success.visible { display: flex; }
+
+    /* Disclaimer */
+    .disclaimer {
+      margin-top: 16px; padding: 12px 16px; background: #f8fafc;
+      border-left: 3px solid var(--primary); border-radius: 0 8px 8px 0;
+      font-size: 12px; color: var(--text-muted);
+    }
+
+    /* Result meta */
+    .result-meta { margin-top: 16px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .meta-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; color: var(--text-muted);
+      background: #f1f5f9; border: 1px solid var(--border);
+      padding: 4px 10px; border-radius: 20px;
+    }
+
+    /* Reset */
+    .reset-btn {
+      display: block; margin: 20px auto 0; background: none;
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 20px; font-size: 13px; color: var(--text-muted);
+      cursor: pointer; transition: all .15s;
+    }
+    .reset-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+    @media (max-width: 520px) {
+      .header h1 { font-size: 22px; }
+      .card { padding: 20px; }
+      .q-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .q-toggle { align-self: flex-end; }
+      .email-form { flex-direction: column; }
+      .email-submit { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="badge">무료 진단</div>
+    <h1>ISMS-P 준비 진단기</h1>
+    <p>업종과 규모를 선택하면 지금 당장 해야 할<br>핵심 준비 항목을 알려드립니다.</p>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="card">
+    <div class="card-label"><span>1</span> 업종을 선택하세요</div>
+    <div class="options col2" id="industry-opts">
+      <label class="option-btn">
+        <input type="radio" name="industry" value="it">
+        <span class="opt-icon">💻</span>
+        <span class="opt-title">IT서비스</span>
+        <span class="opt-desc">SaaS · 앱 · 플랫폼</span>
+      </label>
+      <label class="option-btn">
+        <input type="radio" name="industry" value="shop">
+        <span class="opt-icon">🛒</span>
+        <span class="opt-title">쇼핑몰</span>
+        <span class="opt-desc">온라인 커머스 · 오픈마켓</span>
+      </label>
+      <label class="option-btn">
+        <input type="radio" name="industry" value="hospital">
+        <span class="opt-icon">🏥</span>
+        <span class="opt-title">병원</span>
+        <span class="opt-desc">의원 · 종합병원 · 의료기관</span>
+      </label>
+      <label class="option-btn">
+        <input type="radio" name="industry" value="other">
+        <span class="opt-icon">🏢</span>
+        <span class="opt-title">기타</span>
+        <span class="opt-desc">제조 · 금융 · 공공 등</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="card">
+    <div class="card-label"><span>2</span> 기업 규모를 선택하세요</div>
+    <div class="options col2" id="size-opts">
+      <label class="option-btn">
+        <input type="radio" name="size" value="small">
+        <span class="opt-icon">🌱</span>
+        <span class="opt-title">소기업</span>
+        <span class="opt-desc">매출 300억 미만</span>
+      </label>
+      <label class="option-btn">
+        <input type="radio" name="size" value="large">
+        <span class="opt-icon">🌳</span>
+        <span class="opt-title">중기업</span>
+        <span class="opt-desc">매출 300억 이상</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="card">
+    <div class="card-label"><span>3</span> 현재 운영 현황을 알려주세요</div>
+    <div class="q-progress"><strong id="q-count">0</strong> / 4 완료</div>
+    <div class="q-list" id="q-list"></div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-wrap">
+    <button class="cta-btn" id="diagnose-btn" onclick="diagnose()" disabled>
+      <span>🔍</span> 지금 진단하기
+    </button>
+  </div>
+
+  <!-- Result -->
+  <div id="result" class="card" style="margin-top:28px;">
+    <div class="result-header">
+      <div class="result-icon">📋</div>
+      <div>
+        <div class="result-title" id="result-label"></div>
+        <div class="result-subtitle">지금 당장 준비해야 할 ISMS-P 항목</div>
+      </div>
+    </div>
+    <div id="result-notice"></div>
+    <ul class="items-list" id="items-list"></ul>
+
+    <div class="email-section">
+      <div class="email-label">전체 항목 상세 가이드를 이메일로 받아보세요</div>
+      <div class="email-sublabel">101개 전 인증기준 실무 체크리스트 무료 제공</div>
+      <div class="email-form" id="email-form">
+        <input class="email-input" type="email" id="email-input" placeholder="이메일 주소를 입력하세요">
+        <button class="email-submit" onclick="submitEmail()">무료로 받기</button>
+      </div>
+      <div class="email-success" id="email-success">
+        <span>✅</span> 감사합니다! 곧 이메일로 전달드리겠습니다.
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      ※ 본 진단 결과는 일반적인 가이드라인이며, 실제 인증 준비 시 전문 컨설턴트 검토를 권장합니다.
+      인증 의무 대상 여부는 개인정보보호법 및 정보통신망법 기준을 별도로 확인하세요.
+    </div>
+
+    <div class="result-meta">
+      <span class="meta-tag">📄 KISA 공식 인증기준 안내서(2023.11) 기반</span>
+      <span class="meta-tag">🛡️ 정보보호 종사자가 직접 제작</span>
+    </div>
+
+    <button class="reset-btn" onclick="reset()">↺ 다시 진단하기</button>
+  </div>
+
+</div>
+<script>
+  const QUESTIONS = [
+    { id: 'ciso',       text: 'CISO(정보보호 최고책임자)가 지정되어 있나요?' },
+    { id: 'policy',     text: '정보보호 정책 문서가 있나요?' },
+    { id: 'education',  text: '직원 보안교육을 올해 실시했나요?' },
+    { id: 'encryption', text: '개인정보 암호화가 적용되어 있나요?' },
+  ];
+
+  // [code, title, detail, urgency, tag]
+  // tag: 'ciso' | 'policy' | 'education' | 'encryption' | null
+  const DATA = {
+    it: {
+      small: [
+        ['1.1.2', '최고책임자(CISO/CPO) 지정', '정보보호 및 개인정보보호 최고책임자를 임원급으로 지정하고 역할·책임·권한을 내부 문서로 명시 (일정 규모 이상 법적 의무)', 'high', 'ciso'],
+        ['1.2.1', '정보자산 식별 및 목록 관리', '서버·DB·애플리케이션·클라우드 등 전체 정보자산을 식별하고 중요도를 분류한 자산 목록(대장)을 작성·유지', 'mid', null],
+        ['2.2.4', '임직원 정보보호 교육 연 1회', '전 직원 대상 정보보호 및 개인정보보호 교육을 연 1회 이상 실시하고 이수 기록을 5년 이상 보관', 'mid', 'education'],
+        ['2.7.1', '개인정보 암호화 정책 수립', '전송 구간 암호화(TLS 1.2+), DB 개인정보 암호화, 암호키 생성·저장·폐기 관리 정책을 수립하고 이행 여부 점검', 'high', 'encryption'],
+        ['2.11.2', '취약점 점검 및 조치', '서비스·인프라·소스코드 취약점 점검을 정기적으로 수행하고 발견된 취약점을 위험도(상·중·하)에 따라 기한 내 조치', 'low', null],
+      ],
+      large: [
+        ['1.1.4', 'ISMS-P 인증 범위 및 경계 설정', '인증 대상 서비스·시스템·조직 범위를 명확히 정의하고 경계 네트워크 다이어그램 및 데이터 흐름도 작성', 'high', null],
+        ['1.2.3', '위험관리 체계 고도화', '반기 또는 연 1회 정량·정성 위험평가 수행, 잔여위험 수용 절차 마련 및 경영진 보고 체계 구축', 'high', null],
+        ['2.11.5', '보안관제·침해대응 절차 수립 및 모의훈련', 'SIEM·로그 모니터링 체계 구축 및 연 1회 이상 침해대응 모의훈련 실시, 72시간 신고 절차 내재화', 'high', null],
+        ['3.2.1', '개인정보 처리시스템 전수 현황 파악', '내부 시스템별 개인정보 흐름도 작성, 처리 대장 등록 및 반기 점검 체계 구축', 'mid', null],
+        ['2.3.2', '공급망(협력사) 보안관리 체계 구축', '개인정보 처리 위탁사 목록 파악, 위탁계약서 보안 조항 점검, 연 1회 이상 수탁사 보안 감사 실시', 'mid', null],
+      ],
+    },
+    shop: {
+      small: [
+        ['3.5.1', '개인정보 처리방침 작성 및 웹사이트 공개', '수집 항목(이름·주소·결제정보 등)·목적·보유기간을 명시하고 사이트 하단 링크로 공개 (법적 의무)', 'high', 'policy'],
+        ['2.7.1', 'HTTPS 전면 적용 및 결제 페이지 암호화 확인', '비로그인 페이지 포함 전체 HTTPS(TLS 1.2+) 적용, PG사 연동 결제 모듈 보안 설정 검토', 'high', 'encryption'],
+        ['3.1.1', '회원 가입 시 필수·선택 동의 항목 분리', '마케팅 수신 동의를 필수 동의에서 분리, 선택 동의 거부 시에도 서비스 이용 가능하도록 구현', 'high', null],
+        ['3.4.1', '회원 탈퇴 후 개인정보 파기 절차 마련', '탈퇴 즉시 또는 법정 보존기간 경과 후 파기 처리 로직 구현 및 파기 기록 보관', 'mid', null],
+        ['3.3.2', '배송·물류 위탁사 개인정보 처리 위탁계약서 작성', '택배사·물류창고 등 수탁자와의 계약서에 보안 의무·비밀유지 조항 포함 및 처리방침 내 공개', 'mid', null],
+      ],
+      large: [
+        ['3.2.1', '개인정보 처리시스템 현황 전수 파악 및 흐름도 작성', '주문·결제·배송·마케팅 시스템별 개인정보 흐름 매핑, 처리 대장 등록 및 반기 현행화', 'high', null],
+        ['2.11.5', '침해사고 신고·대응 절차 수립', '개인정보 유출 인지 후 72시간 이내 개인정보보호위원회 신고 절차 문서화 및 대응팀 역할 정의', 'high', null],
+        ['2.5.6', '고객 DB 접근권한 최소화 및 주기적 검토', '운영·개발·CS 담당자별 권한을 직무 기준으로 분리, 분기 1회 접근권한 적정성 검토', 'high', null],
+        ['3.3.2', '협력사(물류·PG·CS) 위탁계약 전면 정비', '수탁사 보안수준 평가 기준 마련, 계약서 보안 조항 재검토 및 연 1회 이상 수탁사 보안 감사', 'mid', null],
+        ['1.4.1', '개인정보 영향평가(PIA) 필요성 검토', '5만 명 이상 민감정보 처리 여부 확인, PIA 의무 해당 시 전문기관 평가 의뢰 일정 수립', 'mid', null],
+      ],
+    },
+    hospital: {
+      small: [
+        ['2.5.5', '진료기록 접근권한 의료진별 차등 설정', '의사·간호사·원무팀 등 직무별로 EMR 접근 범위를 분리하고 비인가 접근 차단 및 접근 로그 활성화', 'high', null],
+        ['3.5.1', '개인정보 처리방침 작성 — 민감정보(건강정보) 포함', '건강정보·주민번호 등 민감정보 처리 항목을 명시하고 원내 게시 또는 홈페이지 공개 (법적 의무)', 'high', 'policy'],
+        ['3.1.4', '환자 동의서 정비 — 진료 외 목적 분리', '진료 목적 동의와 연구·마케팅·제3자 제공 동의를 별도 서식으로 분리, 동의 이력 보관', 'high', null],
+        ['2.5.4', 'EMR 시스템 비밀번호 정책 수립', '90일 이내 주기 변경, 8자 이상 복잡도 기준, 공유 계정 금지, 퇴직자 계정 즉시 비활성화', 'mid', null],
+        ['3.4.1', '진료기록 법정 보관기간 확인 및 파기 절차 마련', '의료법상 10년 보관 의무 확인, 기간 초과 기록의 안전 파기 절차 수립 및 파기 기록 보관', 'mid', null],
+      ],
+      large: [
+        ['1.1.2', '의료정보 보호 종합 정책 수립 및 보안 조직 구성', 'CPO·CISO 임원급 지정, 개인정보보호위원회 설치, 연간 의료정보 보호계획 수립 및 경영진 보고', 'high', 'ciso'],
+        ['2.6.2', 'EMR·HIS·PACS 시스템 접근통제 고도화', '시스템별 직무 기반 접근권한 설정, 접근 로그 수집·분석 체계 구축, 비정상 접근 실시간 탐지', 'high', null],
+        ['1.4.1', '개인정보 영향평가(PIA) 의무 대상 여부 확인', '공공의료기관 또는 대규모 민감정보 처리 시 PIA 의무 — 전문기관 의뢰 및 결과 이행계획 수립', 'high', null],
+        ['2.11.4', '침해사고 대응 계획 수립 및 정기 모의훈련', '랜섬웨어·내부 유출 등 시나리오별 대응 매뉴얼 작성, 연 1회 이상 모의훈련 실시 및 결과 개선', 'mid', null],
+        ['1.4.2', '내부 감사 및 연간 위험평가 체계 구축', '의료기관 특성에 맞는 위험평가 기준 수립, 반기 내부 점검반 운영 및 감사 결과 경영진 보고', 'mid', null],
+      ],
+    },
+    other: {
+      small: [
+        ['3.5.1', '개인정보 처리방침 작성 및 공개', '개인정보를 한 건이라도 수집한다면 처리방침 작성은 법적 의무 — 홈페이지 또는 사업장 게시', 'high', 'policy'],
+        ['3.2.1', '개인정보 처리 대장 작성', '누가, 어떤 개인정보를, 왜, 얼마나 보관하는지 현황을 파악하고 처리 대장으로 문서화', 'high', null],
+        ['1.1.2', '개인정보 보호책임자(CPO) 지정 및 역할 정의', '임원 또는 부서장급 CPO 지정, 역할·책임 내부 문서화 및 홈페이지 공개', 'mid', 'ciso'],
+        ['2.2.4', '임직원 보안 교육 체계 수립 (연 1회 이상)', '전 직원 대상 개인정보보호·정보보안 교육 실시 및 이수 기록 보관', 'mid', 'education'],
+        ['3.3.2', '개인정보 처리 위탁 현황 파악 및 계약서 정비', '급여대행·회계·IT아웃소싱 등 수탁사 목록 파악 및 보안 의무 조항 포함 계약 체결', 'low', null],
+      ],
+      large: [
+        ['1.1.4', 'ISMS-P 인증 의무 대상 여부 확인 및 범위 설정', '연 매출 1,500억 또는 일평균 이용자 100만 이상 의무 기준 해당 여부 확인, 인증 범위 정의', 'high', null],
+        ['1.1.2', '정보보호 거버넌스 체계 구축', 'CISO·CPO 임원급 지정, 정보보호위원회 운영, 연간 정보보호 계획 수립 및 경영진 보고', 'high', 'ciso'],
+        ['1.2.3', '개인정보 처리시스템 현황 파악 및 위험평가', '전사 시스템별 개인정보 흐름도 작성, 위험평가 수행 및 개선 로드맵 수립', 'high', null],
+        ['2.11.5', '침해사고 대응 절차 수립 및 모의훈련 실시', '시나리오별 대응 매뉴얼 작성, 연 1회 이상 모의훈련, 72시간 신고 절차 내재화', 'mid', null],
+        ['1.4.2', '내부 감사 및 규정 준수 점검 체계 마련', '반기 또는 연 1회 내부 감사반 구성, 위반사항 시정 및 경영진 보고 체계 수립', 'mid', null],
+      ],
+    },
+  };
+
+  const URGENCY_LABELS = { high: '즉시', mid: '1개월', low: '3개월' };
+  const URGENCY_CLS   = { high: 'urgency-high', mid: 'urgency-mid', low: 'urgency-low' };
+  const INDUSTRY_NAMES = { it: 'IT서비스', shop: '쇼핑몰', hospital: '병원', other: '기타' };
+  const SIZE_NAMES     = { small: '소기업 (매출 300억 미만)', large: '중기업 (매출 300억 이상)' };
+
+  let selIndustry = null, selSize = null;
+  let answers = { ciso: null, policy: null, education: null, encryption: null };
+
+  // Render question rows
+  document.getElementById('q-list').innerHTML = QUESTIONS.map(q => `
+    <div class="q-row" id="qrow-${q.id}">
+      <span class="q-text">${q.text}</span>
+      <div class="q-toggle">
+        <button class="q-btn" id="q-${q.id}-yes" onclick="answer('${q.id}','yes')">예</button>
+        <button class="q-btn" id="q-${q.id}-no"  onclick="answer('${q.id}','no')">아니오</button>
+      </div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('#industry-opts .option-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#industry-opts .option-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selIndustry = btn.querySelector('input').value;
+      updateBtn();
+    });
+  });
+
+  document.querySelectorAll('#size-opts .option-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#size-opts .option-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selSize = btn.querySelector('input').value;
+      updateBtn();
+    });
+  });
+
+  function answer(qId, val) {
+    answers[qId] = val;
+    const yBtn = document.getElementById(`q-${qId}-yes`);
+    const nBtn = document.getElementById(`q-${qId}-no`);
+    yBtn.className = 'q-btn' + (val === 'yes' ? ' active-yes' : '');
+    nBtn.className = 'q-btn' + (val === 'no'  ? ' active-no'  : '');
+    document.getElementById(`qrow-${qId}`).classList.add('answered');
+    document.getElementById('q-count').textContent = Object.values(answers).filter(v => v !== null).length;
+    updateBtn();
+  }
+
+  function updateBtn() {
+    const allAnswered = Object.values(answers).every(v => v !== null);
+    document.getElementById('diagnose-btn').disabled = !(selIndustry && selSize && allAnswered);
+  }
+
+  function diagnose() {
+    if (!selIndustry || !selSize) return;
+
+    const allItems = DATA[selIndustry][selSize];
+    const items = allItems.filter(item => {
+      const tag = item[4];
+      return !tag || answers[tag] !== 'yes';
+    });
+    const excluded = allItems.length - items.length;
+
+    const resultEl  = document.getElementById('result');
+    const noticeEl  = document.getElementById('result-notice');
+    const listEl    = document.getElementById('items-list');
+    const labelEl   = document.getElementById('result-label');
+
+    labelEl.textContent = `${INDUSTRY_NAMES[selIndustry]} · ${SIZE_NAMES[selSize]} 기준`;
+
+    noticeEl.innerHTML = excluded > 0
+      ? `<div class="result-notice">✅ 이미 갖추신 항목 ${excluded}개는 제외했습니다.</div>`
+      : '';
+
+    if (items.length === 0) {
+      listEl.innerHTML = `
+        <li style="list-style:none;">
+          <div class="empty-state">
+            <div class="empty-icon">🎉</div>
+            <div class="empty-title">기초 보안 항목을 모두 갖추셨네요!</div>
+            <div class="empty-desc">입력하신 현황 기준으로 우선 준비할 항목이 없습니다.<br>다음 단계 심화 항목 가이드를 이메일로 받아보세요.</div>
+          </div>
+        </li>`;
+    } else {
+      listEl.innerHTML = items.map((item, i) => `
+        <li class="item">
+          <div class="item-rank">${i + 1}</div>
+          <div class="item-body">
+            <div class="item-code">${item[0].split('.').slice(0, 2).join('.')}</div>
+            <div class="item-title">${item[1]}</div>
+            <div class="item-detail">${item[2]}</div>
+          </div>
+          <span class="urgency-tag ${URGENCY_CLS[item[3]]}">${URGENCY_LABELS[item[3]]}</span>
+        </li>
+      `).join('');
+    }
+
+    document.getElementById('email-form').style.display = 'flex';
+    document.getElementById('email-success').classList.remove('visible');
+    document.getElementById('email-input').value = '';
+
+    resultEl.classList.remove('visible');
+    resultEl.style.display = 'block';
+    void resultEl.offsetWidth;
+    resultEl.classList.add('visible');
+    resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbw46J61Sb-sCSfJNKtatgAAq9nCo7gxfENibBYlvZHFYijM9QIOst98dvuzRoFt1MM6/exec';
+
+  function submitEmail() {
+    const input = document.getElementById('email-input');
+    const email = input.value.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      input.style.borderColor = '#ef4444';
+      input.focus();
+      setTimeout(() => { input.style.borderColor = ''; }, 1500);
+      return;
+    }
+
+    const payload = {
+      email:       email,
+      industry:    INDUSTRY_NAMES[selIndustry] || selIndustry || '미선택',
+      companySize: SIZE_NAMES[selSize]          || selSize     || '미선택',
+      submittedAt: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
+    };
+
+    fetch(WEBHOOK_URL, {
+      method: 'POST',
+      mode:   'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body:   JSON.stringify(payload)
+    }).catch(() => {});
+
+    document.getElementById('email-form').style.display = 'none';
+    document.getElementById('email-success').classList.add('visible');
+  }
+
+  function reset() {
+    selIndustry = null; selSize = null;
+    answers = { ciso: null, policy: null, education: null, encryption: null };
+    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('input[type=radio]').forEach(r => r.checked = false);
+    QUESTIONS.forEach(q => {
+      document.getElementById(`q-${q.id}-yes`).className = 'q-btn';
+      document.getElementById(`q-${q.id}-no`).className  = 'q-btn';
+      document.getElementById(`qrow-${q.id}`).classList.remove('answered');
+    });
+    document.getElementById('q-count').textContent = '0';
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('result').classList.remove('visible');
+    document.getElementById('diagnose-btn').disabled = true;
+    window.scrollTo({ behavior: 'smooth', top: 0 });
+  }
+</script>
+</body>
+</html>
